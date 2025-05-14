@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-StacktrekApplication<stacktrek>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.stacktrek.stacktrek.StacktrekApplication",
+      "projectName": "stacktrek",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}

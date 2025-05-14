@@ -1,0 +1,18 @@
+.categbutton-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20vw;
+  height: 25vh;
+  border: 1px solid white;
+  border-radius: 2vw;
+  flex-direction: column;
+  opacity: 1;
+  transition: all 0.3s ease-in-out;
+}
+
+.categbutton-container:hover {
+  transform: translateY(-2vh);
+  background-color: #cccccc23;
+  cursor: pointer;
+}

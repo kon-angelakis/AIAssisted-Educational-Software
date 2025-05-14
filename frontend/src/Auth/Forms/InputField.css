@@ -1,0 +1,26 @@
+.input-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+}
+
+.input-container h5 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5em;
+  cursor: default;
+}
+
+.input-container input {
+  font-size: 1.2rem;
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 0.5rem;
+  cursor: text;
+  box-sizing: border-box;
+  border: 1px solid #cccccc6f;
+}
+
+.input-container input:hover {
+  border: 1px solid #ccc;
+}

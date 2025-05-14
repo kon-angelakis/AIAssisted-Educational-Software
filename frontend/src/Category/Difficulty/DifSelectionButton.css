@@ -1,0 +1,46 @@
+.difbutton-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 25vw;
+  height: 25vh;
+  border: 1px solid white;
+  border-radius: 2vw;
+  flex-direction: column;
+  opacity: 1;
+  transition: all 0.3s ease-in-out;
+}
+
+.difbutton-container.disabled {
+  opacity: 0.5;
+  filter: grayscale(100%);
+  background-color: #ff000079;
+  color: white;
+}
+
+.difbutton-container:not(.disabled):hover {
+  transform: translateY(-2vh);
+  background-color: #cccccc23;
+  cursor: pointer;
+}
+
+.difbutton-container.disabled:hover {
+  animation: test 200ms ease-in-out;
+  filter: grayscale(50%);
+  background-color: #ff0000;
+}
+
+@keyframes test {
+  0% {
+    transform: translateX(-60px);
+  }
+  33% {
+    transform: translateX(40px);
+  }
+  66% {
+    transform: translateX(-20px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+}
