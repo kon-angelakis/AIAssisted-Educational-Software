@@ -1,149 +1,114 @@
 package com.stacktrek.stacktrek.AI;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.util.Map;
 
 @Service
 public class AIService {
 
-  private Dotenv env;
-  private final String API_KEY;
-  @Autowired
+    private final WebClient webClient;
+
+    @Autowired
     public AIService(Dotenv env) {
-        this.env = env;
-        this.API_KEY = env.get("OPENAI_API_KEY");
+        this.webClient = WebClient.builder()
+                .baseUrl("https://api.openai.com/v1")
+                .defaultHeader("Content-Type", "application/json")
+                .defaultHeader("Authorization", "Bearer " + env.get("OPENAI_API_KEY"))
+                .defaultHeader("OpenAI-Beta", "assistants=v2")
+                .build();
     }
 
-    public String CreateThread() {
-        
-    Map<String, Object> response = WebClient.create()
-        .post()
-        .uri("https://api.openai.com/v1/threads")
-        .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer " + API_KEY)
-        .header("OpenAI-Beta", "assistants=v2")
-        .retrieve()
-        .bodyToMono(Map.class)
-        .block(); 
-
-        return response.get("id").toString();
+    public Mono<String> createThread() {
+        return webClient.post()
+                .uri("/threads")
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(response -> response.get("id").toString());
     }
 
-    public void AddMessageToThread(String threadId, String message){
-      
-
-      String requestBody = String.format("""
-        {
-          "role": "user",
-          "content": "%s"
-        }
+    public Mono<Void> addMessageToThread(String threadId, String message) {
+        String requestBody = String.format("""
+            {
+              "role": "user",
+              "content": "%s"
+            }
         """, message);
 
-        String response = WebClient.create()
-        .post()
-        .uri("https://api.openai.com/v1/threads/"+threadId+"/messages")
-        .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer " + API_KEY)
-        .header("OpenAI-Beta", "assistants=v2")
-        .bodyValue(requestBody)
-        .retrieve()
-        .bodyToMono(String.class)
-        .block(); 
-        System.out.println(response);
-
+        return webClient.post()
+                .uri("/threads/{threadId}/messages", threadId)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class)
+                .doOnNext(System.out::println)
+                .then();
     }
-    
-    public String CreateAssistantRun(String threadId, String assistantId) { //thread_Gu2rB99N3fHL9Kuign1nFn5U
 
-      String requestBody = String.format("""
-        {
-          "assistant_id": "%s"
-        }
+    public Mono<String> createAssistantRun(String threadId, String assistantId) {
+        String requestBody = String.format("""
+            {
+              "assistant_id": "%s"
+            }
         """, assistantId);
 
-        Map<String, Object> response = WebClient.create()
-        .post()
-        .uri("https://api.openai.com/v1/threads/"+threadId+"/runs")
-        .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer " + API_KEY)
-        .header("OpenAI-Beta", "assistants=v2")
-        .bodyValue(requestBody)
-        .retrieve()
-        .bodyToMono(Map.class)
-        .block(); 
-
-        System.out.println(response);
-        return response.get("id").toString();
+        return webClient.post()
+                .uri("/threads/{threadId}/runs", threadId)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(response -> response.get("id").toString());
     }
 
-    public Boolean GetAssistantRunStatus(String threadId, String runId) {
-        Map<String, Object> response = WebClient.create()
-        .get()
-        .uri("https://api.openai.com/v1/threads/"+threadId+"/runs/"+runId)
-        .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer " + API_KEY)
-        .header("OpenAI-Beta", "assistants=v2")
-        .retrieve()
-        .bodyToMono(Map.class)
-        .block(); 
-
-        System.out.println(response);
-        return "completed".equals(response.get("status").toString());
+    public Mono<Boolean> getAssistantRunStatus(String threadId, String runId) {
+        return webClient.get()
+                .uri("/threads/{threadId}/runs/{runId}", threadId, runId)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(response -> "completed".equals(response.get("status").toString()));
     }
 
-    public String RetrieveAssistantResponse(String threadId) throws JsonMappingException, JsonProcessingException {
-        String response = WebClient.create()
-        .get()
-        .uri("https://api.openai.com/v1/threads/"+threadId+"/messages")
-        .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer " + API_KEY)
-        .header("OpenAI-Beta", "assistants=v2")
-        .retrieve()
-        .bodyToMono(String.class)
-        .block(); 
-
-        System.out.println(response);
-
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(response);
-
-        // Get the first message (assumed to be the assistant's)
-        JsonNode assistantMessage = root.path("data").get(0);
-
-        // Navigate to: data[0].content[0].text.value
-        String messageText = assistantMessage
-            .path("content").get(0)
-            .path("text")
-            .path("value")
-            .asText();
-
-        return messageText;
+    public Mono<Void> waitForRunCompletion(String threadId, String runId) {
+        return Mono.defer(() -> getAssistantRunStatus(threadId, runId))
+                .repeatWhen(flux -> flux.delayElements(Duration.ofMillis(500)))
+                .filter(Boolean::booleanValue)
+                .next()
+                .then();
     }
 
-    public void DeleteThread(String threadId) {
-        String response = WebClient.create()
-        .delete()
-        .uri("https://api.openai.com/v1/threads/"+threadId)
-        .header("Content-Type", "application/json")
-        .header("Authorization", "Bearer " + API_KEY)
-        .header("OpenAI-Beta", "assistants=v2")
-        .retrieve()
-        .bodyToMono(String.class)
-        .block(); 
-
-        System.out.println(response);
+    public Mono<String> retrieveAssistantResponse(String threadId) {
+        return webClient.get()
+                .uri("/threads/{threadId}/messages", threadId)
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(response -> {
+                    try {
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode root = mapper.readTree(response);
+                        JsonNode assistantMessage = root.path("data").get(0);
+                        return assistantMessage
+                                .path("content").get(0)
+                                .path("text")
+                                .path("value")
+                                .asText();
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to parse assistant response", e);
+                    }
+                });
     }
-    
+
+    public Mono<Void> deleteThread(String threadId) {
+        return webClient.delete()
+                .uri("/threads/{threadId}", threadId)
+                .retrieve()
+                .bodyToMono(String.class)
+                .doOnNext(System.out::println)
+                .then();
+    }
 }
