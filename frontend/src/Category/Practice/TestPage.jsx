@@ -6,11 +6,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function TestPage() {
-  let firstname = JSON.parse(localStorage.getItem("UserDetails")).firstName;
-  let lastname = JSON.parse(localStorage.getItem("UserDetails")).lastName;
   const navigate = useNavigate();
   const location = useLocation();
-  const maxQuestions = 10;
+  const maxQuestions = 1;
   const { difficulty, subjectIndex, subject, questionCount, isAiGenerated } =
     location.state || {};
 
@@ -133,7 +131,7 @@ export default function TestPage() {
 
   return (
     <>
-      <Header firstName={firstname} lastName={lastname} />
+      <Header />
       {loading ? (
         <div
           style={{

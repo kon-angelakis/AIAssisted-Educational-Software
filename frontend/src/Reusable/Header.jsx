@@ -2,22 +2,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Header.css";
 import StatsCategory from "./StatsCategory";
-import ProgressBar from "@ramonak/react-progress-bar";
 
 export default function Header() {
-  let firstName = JSON.parse(localStorage.getItem("UserDetails")).firstName;
-  let lastName = JSON.parse(localStorage.getItem("UserDetails")).lastName;
-  let correct = JSON.parse(localStorage.getItem("UserDetails")).correct;
-  let totalCorrect = JSON.parse(
-    localStorage.getItem("UserDetails")
-  ).totalCorrect;
-  let mistakes = JSON.parse(localStorage.getItem("UserDetails")).mistakes;
-  let totalMistakes = JSON.parse(
-    localStorage.getItem("UserDetails")
-  ).totalMistakes;
-  let testsTaken = JSON.parse(localStorage.getItem("UserDetails")).testsTaken;
+  let userDetails = JSON.parse(localStorage.getItem("UserDetails"));
+  let firstName = userDetails.firstName;
+  let lastName = userDetails.lastName;
+  let correct = userDetails.correct;
+  let totalCorrect = userDetails.totalCorrect;
+  let mistakes = userDetails.mistakes;
+  let totalMistakes = userDetails.totalMistakes;
+  let testsTaken = userDetails.testsTaken;
+
   const [visibility, setVisibility] = useState("visible");
-  const [statDisplay, setStatDisplay] = useState("flex");
+  const [statDisplay, setStatDisplay] = useState("none");
   const navigate = useNavigate();
 
   function expandUserSegment() {
@@ -38,9 +35,18 @@ export default function Header() {
 
   function ViewStats() {
     let b = document.getElementById("stats-container");
-    if (statDisplay == "none") setStatDisplay("flex");
-    else setStatDisplay("none");
-    b.style.display = statDisplay;
+    let statsBox = b.querySelector(".stats");
+
+    if (statDisplay === "none") {
+      setStatDisplay("flex");
+      b.style.display = "flex";
+      statsBox.classList.remove("stats-animate");
+      void statsBox.offsetWidth;
+      statsBox.classList.add("stats-animate");
+    } else {
+      setStatDisplay("none");
+      b.style.display = "none";
+    }
   }
 
   function Logout() {
@@ -62,7 +68,8 @@ export default function Header() {
           display: "none",
           justifyContent: "center",
           alignItems: "center",
-          backdropFilter: "blur(5px) brightness(50%)",
+          backdropFilter: "blur(5px) brightness(30%)",
+          backgroundColor: "rgba(24, 24, 24, 0.01)",
         }}
       >
         <div
@@ -72,11 +79,11 @@ export default function Header() {
             height: "80vh",
             backgroundColor: "#242424",
             borderRadius: "2vw",
-            opacity: "0.95",
             display: "flex",
             flexDirection: "column",
             justifyContent: "start",
             alignItems: "center",
+            gap: "5vh",
           }}
         >
           <div
@@ -88,11 +95,14 @@ export default function Header() {
           <div
             className="stats-information"
             style={{
-              width: "100%",
+              width: "90%",
               textAlign: "center",
-              height: "40%",
+              height: "70%",
               display: "flex",
               flexDirection: "row",
+              overflowY: "auto",
+              overflowX: "hidden",
+              whiteSpace: "nowrap",
             }}
           >
             <StatsCategory
@@ -126,7 +136,7 @@ export default function Header() {
                 { label: "Mistakes in Functions", value: mistakes[1][0] },
                 { label: "Mistakes in Objects", value: mistakes[1][1] },
                 { label: "Mistakes in Inheritance", value: mistakes[1][2] },
-                { label: "Mistakes inAbstraction", value: mistakes[1][3] },
+                { label: "Mistakes in Abstraction", value: mistakes[1][3] },
                 { label: "Mistakes total", value: totalMistakes[1] },
                 { label: "Total tests taken", value: testsTaken[1] },
                 {
@@ -243,7 +253,7 @@ export default function Header() {
           >
             <div className="image-seg" onClick={expandUserSegment}>
               <img
-                src="https://sdmntprpolandcentral.oaiusercontent.com/files/00000000-e8b4-620a-807e-fa7d924e0f5e/raw?se=2025-05-14T17%3A07%3A13Z&sp=r&sv=2024-08-04&sr=b&scid=00000000-0000-0000-0000-000000000000&skoid=76024c37-11e2-4c92-aa07-7e519fbe2d0f&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-05-14T06%3A17%3A54Z&ske=2025-05-15T06%3A17%3A54Z&sks=b&skv=2024-08-04&sig=oOlgzzP3/2vwOX81Bzs4qo%2BGLUZ2od49zNLwgg07EvE%3D"
+                src="https://sdmntprpolandcentral.oaiusercontent.com/files/00000000-e8b4-620a-807e-fa7d924e0f5e/raw?se=2025-05-15T13%3A29%3A14Z&sp=r&sv=2024-08-04&sr=b&scid=00000000-0000-0000-0000-000000000000&skoid=0a4a0f0c-99ac-4752-9d87-cfac036fa93f&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-05-15T06%3A33%3A24Z&ske=2025-05-16T06%3A33%3A24Z&sks=b&skv=2024-08-04&sig=U1U%2B5RHeWjxQwfePgLLdWElmAb3Rl85mhf5IUZKt26U%3D"
                 style={{
                   width: "4vw",
                   height: "4vw",

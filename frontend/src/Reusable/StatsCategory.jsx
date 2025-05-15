@@ -6,29 +6,44 @@ export default function StatsCategory({ difficulty, stats }) {
       className="stats-container"
       style={{
         width: "100%",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         justifyContent: "start",
         alignItems: "center",
-        gap: "20%",
       }}
     >
-      <div className="title" style={{ width: "100%", height: "10%" }}>
+      <div
+        className="title"
+        style={{
+          width: "100%",
+          height: "100%",
+          backgroundColor: "#00d2a8",
+          border: "1px solid black",
+        }}
+      >
         <h2>{difficulty}</h2>
       </div>
       <div
         className="info"
         style={{
-          width: "50%",
-          height: "90%",
+          width: "100%",
+          height: "100%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "start",
-          alignItems: "flex-end",
+          alignItems: "center",
         }}
       >
         {stats.map((stat, index) => (
-          <div key={index} className="stat-item">
+          <div
+            key={index}
+            className="stat-item"
+            style={{
+              width: "50%",
+              marginTop: "10px",
+            }}
+          >
             {stat.isProgressBar !== true ? (
               <p>
                 {stat.label}: {stat.value}
