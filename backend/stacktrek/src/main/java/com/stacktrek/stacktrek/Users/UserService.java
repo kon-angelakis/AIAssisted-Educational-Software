@@ -81,4 +81,22 @@ public class UserService implements UserDetailsService{
         return false;
     }
 
+    public int[][] GetWeakestSubjects(int[][] mistakes) {
+        List<int[]> list = new ArrayList<>();
+
+        for (int i = 0; i < mistakes.length; i++) {
+            for (int j = 0; j < mistakes[i].length; j++) {
+                list.add(new int[]{i, j, mistakes[i][j]});
+            }
+        }
+
+        list.sort((a, b) -> Integer.compare(b[2], a[2]));
+
+        int[][] result = new int[3][2];
+        for (int k = 0; k < 3 && k < list.size(); k++) {
+            result[k][0] = list.get(k)[0];
+            result[k][1] = list.get(k)[1];
+        }
+        return result;
+    }
 }
