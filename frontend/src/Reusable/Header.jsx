@@ -306,13 +306,7 @@ export default function Header() {
                     link={recommendation.link}
                   />
                 ))
-              : [...Array(3)].map((_, index) => (
-                  <Recommendation
-                    key={index}
-                    subject={"Loading Subject"}
-                    summary={"Loading Summary"}
-                  />
-                ))}
+              : [...Array(3)].map((_, index) => <Recommendation key={index} />)}
           </div>
         </div>
       </div>

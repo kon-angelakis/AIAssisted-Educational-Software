@@ -1,37 +1,58 @@
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+
 export default function Recommendation({ subject, summary, link }) {
   return (
-    <div
-      className="recommendation-container"
-      style={{
-        width: "90%",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignContent: "start",
-      }}
-    >
-      <div className="recommendation-subject-title" style={{ width: "100%" }}>
-        <h3>{subject}</h3>
-      </div>
+    <SkeletonTheme baseColor="#202020" highlightColor="#444">
       <div
-        className="recommendation-info"
+        className="recommendation-container"
         style={{
-          width: "100%",
+          width: "90%",
           display: "flex",
-          flexDirection: "row",
-          gap: "1vw",
-          alignItems: "center",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignContent: "start",
         }}
       >
-        <div className="recommendation-summary" style={{ width: "90%" }}>
-          <p>{summary}</p>
+        <div className="recommendation-subject-title" style={{ width: "20%" }}>
+          <h3>
+            {subject || (
+              <Skeleton height={15} style={{ borderRadius: "5rem" }} />
+            )}
+          </h3>
         </div>
-        <div className="recommendation-link">
-          <button onClick={() => window.open(link, "_blank")} disabled={!link}>
-            View More
-          </button>
+        <div
+          className="recommendation-info"
+          style={{
+            width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            gap: "1vw",
+            alignItems: "center",
+          }}
+        >
+          <div className="recommendation-summary" style={{ width: "90%" }}>
+            <p>
+              {summary || (
+                <Skeleton
+                  height={10}
+                  style={{ borderRadius: "5rem" }}
+                  width={"70%"}
+                  count={4.8}
+                />
+              )}
+            </p>
+          </div>
+          <div className="recommendation-link">
+            <button
+              onClick={() => window.open(link, "_blank")}
+              disabled={!link}
+            >
+              View More
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </SkeletonTheme>
   );
 }
