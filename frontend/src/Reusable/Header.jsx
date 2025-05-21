@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Header.css";
 import StatsCategory from "./StatsCategory";
+import axios from "axios";
+import Recommendation from "./Recommendation";
 
 export default function Header() {
   let userDetails = JSON.parse(localStorage.getItem("UserDetails"));
@@ -12,10 +14,19 @@ export default function Header() {
   let mistakes = userDetails.mistakes;
   let totalMistakes = userDetails.totalMistakes;
   let testsTaken = userDetails.testsTaken;
+  let failedQuestions = userDetails.failedQuestions;
 
   const [visibility, setVisibility] = useState("visible");
   const [statDisplay, setStatDisplay] = useState("none");
   const navigate = useNavigate();
+
+  const [recommendations, setRecommendations] = useState([]);
+
+  const subjectMap = [
+    ["Vars & Types", "Conditionals", "Arrays", "Loops"], // Easy
+    ["Functions", "Objects", "Inheritance", "Abstraction"], // Medium
+    ["Interfaces", "Exceptions", "Generics", ""], // Hard (last column unused)
+  ];
 
   function expandUserSegment() {
     let a = document.getElementById("extended-seg");
@@ -35,17 +46,54 @@ export default function Header() {
 
   function ViewStats() {
     let b = document.getElementById("stats-container");
-    let statsBox = b.querySelector(".stats");
+    let statsBox = b.querySelector(".general-container");
 
     if (statDisplay === "none") {
       setStatDisplay("flex");
       b.style.display = "flex";
-      statsBox.classList.remove("stats-animate");
+      statsBox.classList.remove("general-container-animate");
       void statsBox.offsetWidth;
-      statsBox.classList.add("stats-animate");
+      statsBox.classList.add("general-container-animate");
     } else {
       setStatDisplay("none");
       b.style.display = "none";
+    }
+
+    //run it every time the stat box is shown(could make it so it runs only once but we want it to update if the user has a new weakness that was not mentioned before)
+    setRecommendations([]);
+    if (statDisplay === "none") {
+      axios
+        .post("http://localhost:1010/getweakestsubjects", {
+          subjects: mistakes,
+        })
+        .then((response) => {
+          const [i, j] = response.data[0];
+          const [i2, j2] = response.data[1];
+          const [i3, j3] = response.data[2];
+          axios
+            .post(
+              "http://localhost:1010/WeaknessEvaluator",
+              {
+                message: `categories: {${subjectMap[i][j]},${subjectMap[i2][j2]},${subjectMap[i3][j3]}}, correct: {${mistakes[i][j]},${mistakes[i2][j2]},${mistakes[i3][j3]}}, failedQuestions: {${failedQuestions}}`,
+              },
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            )
+            .then((response) => {
+              setRecommendations(response.data);
+            })
+
+            .catch((error) => {
+              console.error("Error generating answer:", error);
+            });
+        })
+        .catch((error) => {
+          console.error(`Error:`, error);
+          throw error; // Rethrow to catch in the main logic
+        });
     }
   }
 
@@ -57,7 +105,7 @@ export default function Header() {
   return (
     <>
       <div
-        className="stats-container"
+        className="stats-recommendations-container"
         id="stats-container"
         style={{
           width: "100vw",
@@ -73,7 +121,7 @@ export default function Header() {
         }}
       >
         <div
-          className="stats"
+          className="general-container"
           style={{
             width: "80vw",
             height: "80vh",
@@ -84,100 +132,187 @@ export default function Header() {
             justifyContent: "start",
             alignItems: "center",
             gap: "5vh",
+            overflowY: "scroll",
+            overflowX: "hidden",
+            scrollSnapType: "y-mandatory",
+            scrollBehavior: "smooth",
           }}
         >
           <div
-            className="stats-title"
-            style={{ width: "100%", textAlign: "center", height: "10%" }}
-          >
-            <h1>Stats</h1>
-          </div>
-          <div
-            className="stats-information"
+            className="stats"
             style={{
-              width: "90%",
-              textAlign: "center",
-              height: "70%",
+              width: "100%",
+              height: "100%",
               display: "flex",
-              flexDirection: "row",
-              overflowY: "auto",
-              overflowX: "hidden",
-              whiteSpace: "nowrap",
+              flexDirection: "column",
+              justifyContent: "start",
+              alignItems: "center",
+              gap: "5vh",
+              scrollSnapAlign: "start",
             }}
           >
-            <StatsCategory
-              difficulty={"Easy"}
-              stats={[
-                { label: "Mistakes in Vars & Types", value: mistakes[0][0] },
-                { label: "Mistakes in Conditionals", value: mistakes[0][1] },
-                { label: "Mistakes in Arrays", value: mistakes[0][2] },
-                { label: "Mistakes in Loops", value: mistakes[0][3] },
-                { label: "Mistakes total", value: totalMistakes[0] },
-                { label: "Total tests taken", value: testsTaken[0] },
-                {
-                  label: "Right/Wrong Ratio",
-                  value:
-                    Math.round(
-                      (totalCorrect[0] / (totalMistakes[0] + 1)) * 100
-                    ) / 100,
-                },
-                {
-                  label: "Total Correct",
-                  value: totalCorrect[0],
-                  endValue: 40,
-                  isProgressBar: true,
-                },
-              ]}
-            />
+            <div
+              className="stats-title"
+              style={{ width: "100%", textAlign: "center", height: "10%" }}
+            >
+              <h1>Stats</h1>
+            </div>
+            <div
+              className="stats-information"
+              style={{
+                width: "90%",
+                textAlign: "center",
+                height: "70%",
+                display: "flex",
+                flexDirection: "row",
+                overflowY: "auto",
+                overflowX: "hidden",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <StatsCategory
+                difficulty={"Easy"}
+                stats={[
+                  {
+                    label: "Mistakes in " + subjectMap[0][0],
+                    value: mistakes[0][0],
+                  },
+                  {
+                    label: "Mistakes in " + subjectMap[0][1],
+                    value: mistakes[0][1],
+                  },
+                  {
+                    label: "Mistakes in " + subjectMap[0][2],
+                    value: mistakes[0][2],
+                  },
+                  {
+                    label: "Mistakes in " + subjectMap[0][3],
+                    value: mistakes[0][3],
+                  },
+                  { label: "Mistakes total", value: totalMistakes[0] },
+                  { label: "Total tests taken", value: testsTaken[0] },
+                  {
+                    label: "Right/Wrong Ratio",
+                    value:
+                      Math.round(
+                        (totalCorrect[0] / (totalMistakes[0] + 1)) * 100
+                      ) / 100,
+                  },
+                  {
+                    label: "Total Correct",
+                    value: totalCorrect[0],
+                    endValue: 40,
+                    isProgressBar: true,
+                  },
+                ]}
+              />
 
-            <StatsCategory
-              difficulty={"Medium"}
-              stats={[
-                { label: "Mistakes in Functions", value: mistakes[1][0] },
-                { label: "Mistakes in Objects", value: mistakes[1][1] },
-                { label: "Mistakes in Inheritance", value: mistakes[1][2] },
-                { label: "Mistakes in Abstraction", value: mistakes[1][3] },
-                { label: "Mistakes total", value: totalMistakes[1] },
-                { label: "Total tests taken", value: testsTaken[1] },
-                {
-                  label: "Right/Wrong Ratio",
-                  value:
-                    Math.round(
-                      (totalCorrect[1] / (totalMistakes[1] + 1)) * 100
-                    ) / 100,
-                },
-                {
-                  label: "Total Correct",
-                  value: totalCorrect[1],
-                  endValue: 40,
-                  isProgressBar: true,
-                },
-              ]}
-            />
+              <StatsCategory
+                difficulty={"Medium"}
+                stats={[
+                  {
+                    label: "Mistakes in " + subjectMap[1][0],
+                    value: mistakes[1][0],
+                  },
+                  {
+                    label: "Mistakes in " + subjectMap[1][1],
+                    value: mistakes[1][1],
+                  },
+                  {
+                    label: "Mistakes in " + subjectMap[1][2],
+                    value: mistakes[1][2],
+                  },
+                  {
+                    label: "Mistakes in " + subjectMap[1][3],
+                    value: mistakes[1][3],
+                  },
+                  { label: "Mistakes total", value: totalMistakes[1] },
+                  { label: "Total tests taken", value: testsTaken[1] },
+                  {
+                    label: "Right/Wrong Ratio",
+                    value:
+                      Math.round(
+                        (totalCorrect[1] / (totalMistakes[1] + 1)) * 100
+                      ) / 100,
+                  },
+                  {
+                    label: "Total Correct",
+                    value: totalCorrect[1],
+                    endValue: 40,
+                    isProgressBar: true,
+                  },
+                ]}
+              />
 
-            <StatsCategory
-              difficulty={"Hard"}
-              stats={[
-                { label: "Mistakes in Interfaces", value: mistakes[2][0] },
-                { label: "Mistakes in Exceptions", value: mistakes[2][1] },
-                { label: "Mistakes in Generics", value: mistakes[2][2] },
-                { label: "Mistakes total", value: totalMistakes[2] },
-                { label: "Total tests taken", value: testsTaken[2] },
-                {
-                  label: "Right/Wrong Ratio",
-                  value:
-                    Math.round(
-                      (totalCorrect[2] / (totalMistakes[2] + 1)) * 100
-                    ) / 100,
-                },
-                {
-                  label: "Total Correct",
-                  value: totalCorrect[2],
-                  endValue: 30,
-                  isProgressBar: true,
-                },
-              ]}
-            />
+              <StatsCategory
+                difficulty={"Hard"}
+                stats={[
+                  {
+                    label: "Mistakes in " + subjectMap[2][0],
+                    value: mistakes[2][0],
+                  },
+                  {
+                    label: "Mistakes in " + subjectMap[2][1],
+                    value: mistakes[2][1],
+                  },
+                  {
+                    label: "Mistakes in " + subjectMap[2][2],
+                    value: mistakes[2][2],
+                  },
+                  { label: "Mistakes total", value: totalMistakes[2] },
+                  { label: "Total tests taken", value: testsTaken[2] },
+                  {
+                    label: "Right/Wrong Ratio",
+                    value:
+                      Math.round(
+                        (totalCorrect[2] / (totalMistakes[2] + 1)) * 100
+                      ) / 100,
+                  },
+                  {
+                    label: "Total Correct",
+                    value: totalCorrect[2],
+                    endValue: 30,
+                    isProgressBar: true,
+                  },
+                ]}
+              />
+            </div>
+          </div>
+          <div
+            className="recommendations"
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "start",
+              alignItems: "center",
+              gap: "5vh",
+              scrollSnapAlign: "start",
+            }}
+          >
+            <div
+              className="recommendations-title"
+              style={{ width: "100%", textAlign: "center", height: "10%" }}
+            >
+              <h1>Recommendations</h1>
+            </div>
+            {recommendations && recommendations.length > 0
+              ? recommendations.map((recommendation, index) => (
+                  <Recommendation
+                    key={index}
+                    subject={recommendation.topic}
+                    summary={recommendation.summary}
+                    link={recommendation.link}
+                  />
+                ))
+              : [...Array(3)].map((_, index) => (
+                  <Recommendation
+                    key={index}
+                    subject={"Loading Subject"}
+                    summary={"Loading Summary"}
+                  />
+                ))}
           </div>
         </div>
       </div>
@@ -234,7 +369,7 @@ export default function Header() {
               }}
             ></img>
           </div>
-          <h1>StackTrek</h1>
+          <h1>StackTrek v1.0</h1>
           <div
             className="user-info"
             style={{
@@ -253,7 +388,7 @@ export default function Header() {
           >
             <div className="image-seg" onClick={expandUserSegment}>
               <img
-                src="https://sdmntprpolandcentral.oaiusercontent.com/files/00000000-e8b4-620a-807e-fa7d924e0f5e/raw?se=2025-05-15T13%3A29%3A14Z&sp=r&sv=2024-08-04&sr=b&scid=00000000-0000-0000-0000-000000000000&skoid=0a4a0f0c-99ac-4752-9d87-cfac036fa93f&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-05-15T06%3A33%3A24Z&ske=2025-05-16T06%3A33%3A24Z&sks=b&skv=2024-08-04&sig=U1U%2B5RHeWjxQwfePgLLdWElmAb3Rl85mhf5IUZKt26U%3D"
+                src="../../avatar.png"
                 style={{
                   width: "4vw",
                   height: "4vw",
@@ -278,8 +413,8 @@ export default function Header() {
                   gap: "5px",
                 }}
               >
-                <button onClick={StartRevisionTest}>Revision</button>
                 <button onClick={ViewStats}>View Stats</button>
+                <button onClick={StartRevisionTest}>Revision</button>
                 <button style={{ backgroundColor: "red" }} onClick={Logout}>
                   Logout
                 </button>

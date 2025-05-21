@@ -1,14 +1,14 @@
 import Header from "../../Reusable/Header";
 import CategSelectionButton from "../CategSelectionButton";
 import CategTab from "../CategTab";
-import { data, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function TestPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const maxQuestions = 1;
+  const maxQuestions = 10;
   const { difficulty, subjectIndex, subject, questionCount, isAiGenerated } =
     location.state || {};
 
@@ -20,18 +20,19 @@ export default function TestPage() {
   const [score, setScore] = useState(0);
   const [failedQuestions, setFailedQuestions] = useState([]);
 
-  //On website load
+  //On website load each time
   useEffect(() => {
     setLoading(true);
 
-    const questionType = Math.random() < 0.5 ? "MC" : "TF";
-    if (isAiGenerated) generateQuestion(questionType);
-    else randomizeQuestion();
+    //For revision questions are pulled from the database
+    if (!isAiGenerated) randomizeQuestion();
   }, [questionCount]);
 
-  //Stop on the nth number of questions
+  //Stop on the nth number of questions and generate a set of questions once
   useEffect(() => {
-    if (questionCount === maxQuestions) {
+    if (questionCount === 0) {
+      generateQuestion();
+    } else if (questionCount === maxQuestions) {
       submitResults(),
         navigate("/home", {
           state: {
@@ -39,15 +40,34 @@ export default function TestPage() {
           },
         });
       alert(`Test over. You got ${score}/${maxQuestions} questions right.`);
+    } else {
+      const storedQuestions = JSON.parse(localStorage.getItem("questions"));
+
+      setQuestion(storedQuestions[questionCount].question);
+      setAnswers(
+        storedQuestions[questionCount].question_type === "MC"
+          ? [
+              storedQuestions[questionCount].answers[0],
+              storedQuestions[questionCount].answers[1],
+              storedQuestions[questionCount].answers[2],
+              storedQuestions[questionCount].answers[3],
+            ]
+          : [
+              storedQuestions[questionCount].answers[0],
+              storedQuestions[questionCount].answers[1],
+            ]
+      );
+      setCorrectAnswer(storedQuestions[questionCount].correct_answer_index);
+      setLoading(false); // Stop loading
     }
   }, [questionCount]);
 
-  function generateQuestion(questionType) {
+  function generateQuestion() {
     return axios
       .post(
-        "http://localhost:1010/CreateThread",
+        "http://localhost:1010/QuestionGiver",
         {
-          message: `language: JAVA, topic: ${subject}, difficulty: ${difficulty}, style: ${questionType}`,
+          message: `language: JAVA, topic: ${subject}, difficulty: ${difficulty}, number_of_questions: ${maxQuestions}`,
         },
         {
           headers: {
@@ -57,18 +77,20 @@ export default function TestPage() {
       )
       .then((response) => {
         const data = response.data;
-        setQuestion(data.question);
+        localStorage.setItem("questions", JSON.stringify(data));
+
+        setQuestion(data[0].question);
         setAnswers(
-          questionType === "MC"
+          data[0].question_type === "MC"
             ? [
-                data.answers[0],
-                data.answers[1],
-                data.answers[2],
-                data.answers[3],
+                data[0].answers[0],
+                data[0].answers[1],
+                data[0].answers[2],
+                data[0].answers[3],
               ]
-            : [data.answers[0], data.answers[1]]
+            : [data[0].answers[0], data[0].answers[1]]
         );
-        setCorrectAnswer(data.correct_answer);
+        setCorrectAnswer(data[0].correct_answer_index);
         setLoading(false); // Stop loading
         return data;
       })
@@ -142,7 +164,7 @@ export default function TestPage() {
             alignItems: "center",
           }}
         >
-          <h1>Loading question...</h1>
+          <h1>Loading questions...</h1>
         </div>
       ) : (
         <CategTab

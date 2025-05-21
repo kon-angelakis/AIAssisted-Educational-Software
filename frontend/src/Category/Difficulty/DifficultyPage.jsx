@@ -24,7 +24,7 @@ export default function DifficultyPage({ mode }) {
                 state: {
                   difficulty: "Easy",
                   subjects: [
-                    ["Variables and Types"],
+                    ["Variables"],
                     ["Conditionals"],
                     ["Arrays"],
                     ["Loops"],

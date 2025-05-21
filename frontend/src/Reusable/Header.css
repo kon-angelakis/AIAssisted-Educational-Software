@@ -27,6 +27,6 @@ img:active {
   }
 }
 
-.stats-animate {
+.general-container-animate {
   animation: slideDownFadeIn 1s ease-out forwards;
 }
