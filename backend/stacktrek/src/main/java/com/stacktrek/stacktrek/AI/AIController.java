@@ -19,7 +19,7 @@ public class AIController {
     private AIService aiService;
 
     @PostMapping("/QuestionGiver")
-    public ResponseEntity<String> CreateThread(@RequestBody Map<String, String> payload) throws JsonMappingException, JsonProcessingException, InterruptedException {
+    public ResponseEntity<String> GenerateQuestions(@RequestBody Map<String, String> payload) throws JsonMappingException, JsonProcessingException, InterruptedException {
         String threadId = aiService.CreateThread();
         aiService.AddMessageToThread(threadId, payload.get("message").toString());
         String runId = aiService.CreateAssistantRun(threadId, "asst_HIJVbCjIN9jWayRWEgieZ2lQ");
@@ -38,6 +38,21 @@ public class AIController {
         String threadId = aiService.CreateThread();
         aiService.AddMessageToThread(threadId, payload.get("message").toString());
         String runId = aiService.CreateAssistantRun(threadId, "asst_T3MNodGzGHRH5stT1MWLES7J");
+        while(!aiService.GetAssistantRunStatus(threadId, runId)){
+            Thread.sleep(500);
+        }
+        String assistantResponse = aiService.RetrieveAssistantResponse(threadId);
+        String cleanResponse = assistantResponse.replaceAll("```json\\n|\\n```", "");
+        System.out.println("Assistant Response: " + cleanResponse);
+        aiService.DeleteThread(threadId);
+        return new ResponseEntity<String>(cleanResponse, HttpStatus.OK);
+    }
+
+    @PostMapping("/PersonalisedQuestionGiver")
+    public ResponseEntity<String> GeneratePersonalisedQuestions(@RequestBody Map<String, String> payload) throws JsonMappingException, JsonProcessingException, InterruptedException {
+        String threadId = aiService.CreateThread();
+        aiService.AddMessageToThread(threadId, payload.get("message").toString());
+        String runId = aiService.CreateAssistantRun(threadId, "asst_jDi9EOjUCqarau9eY3x3zYWW");
         while(!aiService.GetAssistantRunStatus(threadId, runId)){
             Thread.sleep(500);
         }
