@@ -37,7 +37,7 @@ public class AIController {
     public ResponseEntity<String> EvaluateWeakness(@RequestBody Map<String, String> payload) throws JsonMappingException, JsonProcessingException, InterruptedException {
         String threadId = aiService.CreateThread();
         aiService.AddMessageToThread(threadId, payload.get("message").toString());
-        String runId = aiService.CreateAssistantRun(threadId, "asst_SWBIbWZx5Zv0HVOEhsq7M9D0");
+        String runId = aiService.CreateAssistantRun(threadId, "asst_T3MNodGzGHRH5stT1MWLES7J");
         while(!aiService.GetAssistantRunStatus(threadId, runId)){
             Thread.sleep(500);
         }
