@@ -363,7 +363,7 @@ export default function Header() {
               }}
             ></img>
           </div>
-          <h1>StackTrek v1.0</h1>
+          <h1>StackTrek v2.0</h1>
           <div
             className="user-info"
             style={{

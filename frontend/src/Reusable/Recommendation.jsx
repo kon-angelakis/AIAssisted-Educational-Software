@@ -1,7 +1,10 @@
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import { useNavigate } from "react-router-dom";
 
 export default function Recommendation({ subject, summary, link }) {
+  const navigate = useNavigate();
+
   return (
     <SkeletonTheme baseColor="#202020" highlightColor="#444">
       <div
@@ -39,6 +42,7 @@ export default function Recommendation({ subject, summary, link }) {
                   style={{ borderRadius: "5rem" }}
                   width={"95%"}
                   count={4.8}
+                  duration={1.85}
                 />
               )}
             </p>
@@ -47,17 +51,44 @@ export default function Recommendation({ subject, summary, link }) {
             className="buttons"
             style={{ display: "flex", flexDirection: "column", gap: "10px" }}
           >
-            <div className="recommendation-link">
-              <button
-                onClick={() => window.open(link, "_blank")}
-                disabled={!link}
-              >
-                Learn More
-              </button>
-            </div>
-            <div className="practice-link">
-              <button>Train More</button>
-            </div>
+            {link ? (
+              <>
+                <div className="recommendation-link">
+                  <button
+                    onClick={() => window.open(link, "_blank")}
+                    disabled={!link}
+                  >
+                    Learn More
+                  </button>
+                </div>
+                <div className="practice-link">
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("questions");
+
+                      navigate(`/practice/test`, {
+                        state: {
+                          questionCount: 0,
+                          isPersonalised: true,
+                          personalizedDescription: summary,
+                        },
+                      });
+                    }}
+                  >
+                    Train More
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <Skeleton height={50} width={100} duration={1.1} />
+                </div>
+                <div>
+                  <Skeleton height={50} width={100} duration={1.1} />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

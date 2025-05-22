@@ -9,8 +9,15 @@ export default function TestPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const maxQuestions = 10;
-  const { difficulty, subjectIndex, subject, questionCount, isAiGenerated } =
-    location.state || {};
+  const {
+    difficulty,
+    subjectIndex,
+    subject,
+    questionCount,
+    isAiGenerated,
+    isPersonalised,
+    personalizedDescription,
+  } = location.state || {};
 
   const [question, setQuestion] = useState("");
   const [answers, setAnswers] = useState([]);
@@ -25,13 +32,14 @@ export default function TestPage() {
     setLoading(true);
 
     //For revision questions are pulled from the database
-    if (!isAiGenerated) randomizeQuestion();
+    if (!isAiGenerated && !isPersonalised) randomizeQuestion();
   }, [questionCount]);
 
   //Stop on the nth number of questions and generate a set of questions once
   useEffect(() => {
     if (questionCount === 0) {
-      generateQuestion();
+      if (!isPersonalised) generateQuestions();
+      else generatePersonalisedQuestions();
     } else if (questionCount === maxQuestions) {
       submitResults(),
         navigate("/home", {
@@ -62,7 +70,7 @@ export default function TestPage() {
     }
   }, [questionCount]);
 
-  function generateQuestion() {
+  function generateQuestions() {
     return axios
       .post(
         "http://localhost:1010/QuestionGiver",
@@ -95,7 +103,45 @@ export default function TestPage() {
         return data;
       })
       .catch((error) => {
-        console.error("Error generating question:", error);
+        console.error("Error generating questions:", error);
+        setLoading(false); // Stop loading even if failed
+      });
+  }
+
+  function generatePersonalisedQuestions() {
+    return axios
+      .post(
+        "http://localhost:1010/PersonalisedQuestionGiver",
+        {
+          message: `description: ${personalizedDescription}, number_of_questions: ${maxQuestions}`,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((response) => {
+        const data = response.data;
+        localStorage.setItem("questions", JSON.stringify(data));
+
+        setQuestion(data[0].question);
+        setAnswers(
+          data[0].question_type === "MC"
+            ? [
+                data[0].answers[0],
+                data[0].answers[1],
+                data[0].answers[2],
+                data[0].answers[3],
+              ]
+            : [data[0].answers[0], data[0].answers[1]]
+        );
+        setCorrectAnswer(data[0].correct_answer_index);
+        setLoading(false); // Stop loading
+        return data;
+      })
+      .catch((error) => {
+        console.error("Error generating questions:", error);
         setLoading(false); // Stop loading even if failed
       });
   }
@@ -183,6 +229,8 @@ export default function TestPage() {
                     subject,
                     questionCount: questionCount + 1,
                     isAiGenerated: isAiGenerated,
+                    isPersonalised: isPersonalised,
+                    personalizedDescription: personalizedDescription,
                   },
                 });
               }}
