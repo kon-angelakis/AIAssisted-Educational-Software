@@ -31,25 +31,33 @@ export default function Recommendation({ subject, summary, link }) {
             alignItems: "center",
           }}
         >
-          <div className="recommendation-summary" style={{ width: "90%" }}>
-            <p>
+          <div className="recommendation-summary" style={{ width: "100%" }}>
+            <p style={{ textAlign: "justify", width: "95%" }}>
               {summary || (
                 <Skeleton
                   height={10}
                   style={{ borderRadius: "5rem" }}
-                  width={"70%"}
+                  width={"95%"}
                   count={4.8}
                 />
               )}
             </p>
           </div>
-          <div className="recommendation-link">
-            <button
-              onClick={() => window.open(link, "_blank")}
-              disabled={!link}
-            >
-              View More
-            </button>
+          <div
+            className="buttons"
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
+            <div className="recommendation-link">
+              <button
+                onClick={() => window.open(link, "_blank")}
+                disabled={!link}
+              >
+                Learn More
+              </button>
+            </div>
+            <div className="practice-link">
+              <button>Train More</button>
+            </div>
           </div>
         </div>
       </div>

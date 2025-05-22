@@ -74,7 +74,7 @@ export default function Header() {
             .post(
               "http://localhost:1010/WeaknessEvaluator",
               {
-                message: `categories: {${subjectMap[i][j]},${subjectMap[i2][j2]},${subjectMap[i3][j3]}}, correct: {${mistakes[i][j]},${mistakes[i2][j2]},${mistakes[i3][j3]}}, failedQuestions: {${failedQuestions}}`,
+                message: `categories: {${subjectMap[i][j]},${subjectMap[i2][j2]},${subjectMap[i3][j3]}}, mistakes: {${mistakes[i][j]},${mistakes[i2][j2]},${mistakes[i3][j3]}}, failedQuestions: {${failedQuestions}}`,
               },
               {
                 headers: {
